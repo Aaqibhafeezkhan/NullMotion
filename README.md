@@ -16,6 +16,8 @@
 <p align="center">
   <a href="https://github.com/blixvip/NullMotion/stargazers"><img src="https://img.shields.io/github/stars/blixvip/NullMotion?style=flat-square&color=ff5a1f" alt="GitHub stars"></a>
   <a href="https://github.com/blixvip/NullMotion/releases"><img src="https://img.shields.io/github/v/release/blixvip/NullMotion?style=flat-square&color=111" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/license-MIT-111?style=flat-square" alt="MIT License">
+  <a href="https://github.com/blixvip/NullMotion/contribute"><img src="https://img.shields.io/github/issues/blixvip/NullMotion/good%20first%20issue?style=flat-square&color=ff5a1f&label=good%20first%20issues" alt="Good first issues"></a>
   <img src="https://img.shields.io/badge/node-22%2B-111?style=flat-square" alt="Node 22+">
   <img src="https://img.shields.io/badge/dependencies-none-111?style=flat-square" alt="No runtime dependencies">
   <img src="https://img.shields.io/badge/export-MP4%20%C2%B7%20WebCodecs-ff5a1f?style=flat-square" alt="MP4 export with WebCodecs">
@@ -172,11 +174,21 @@ npm test        # node --test
 
 - The browser only calls this project's own origin.
 - The earlier launch editor (reference timeline, trimming, brand overlay) is at `/editor`, and the original Null Motion template gallery is at `/index.html`.
-- Bundled GSAP and mp4-muxer keep their licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Brand artwork and reference footage belong to their respective owners. No project-wide open-source license has been selected.
+- Bundled GSAP and mp4-muxer keep their licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Brand artwork and reference footage belong to their respective owners and are not covered by the project license.
 
 ## Contributing
 
-Bug reports, draft ideas, and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks. For questions, the [Discord](https://discord.gg/zEB4VjmfSb) is the fastest place to ask.
+**We're looking for contributors.** Null Motion is small, has zero dependencies, and runs with `npm start`, so you can make your first change in minutes.
+
+- 🟢 **Start here:** [good first issues](https://github.com/blixvip/NullMotion/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22): small, scoped, with the files to look at.
+- 🙋 **Bigger pieces:** [help wanted](https://github.com/blixvip/NullMotion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22): new draft beat kinds, export options, cross-platform testing.
+- 💡 **Ideas and questions:** [Discussions](https://github.com/blixvip/NullMotion/discussions) or the [Discord](https://discord.gg/zEB4VjmfSb).
+
+Comment on an issue to claim it, and we'll review pull requests within a couple of days. Setup and checks are in [CONTRIBUTING.md](CONTRIBUTING.md). Every contributor is credited in the release notes.
+
+## License
+
+[MIT](LICENSE). Bundled GSAP and mp4-muxer keep their own licenses (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)). Reference footage and third-party brand marks belong to their owners.
 
 ## Community
 

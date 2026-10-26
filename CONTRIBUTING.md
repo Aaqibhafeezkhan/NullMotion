@@ -2,6 +2,15 @@
 
 Thanks for helping! Questions and ideas are welcome in the **[Discord](https://discord.gg/zEB4VjmfSb)**, and bugs go in [GitHub issues](https://github.com/blixvip/NullMotion/issues/new/choose).
 
+## Finding something to work on
+
+- [Good first issues](https://github.com/blixvip/NullMotion/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are small and list the files to touch.
+- [Help wanted](https://github.com/blixvip/NullMotion/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues are bigger.
+- Comment on the issue to claim it so two people don't build the same thing. If you go quiet for a week, it opens up again.
+- Have your own idea? Open a [Discussion](https://github.com/blixvip/NullMotion/discussions) first for anything larger than a bug fix.
+
+By contributing, you agree your work is released under the project's [MIT License](LICENSE).
+
 ## Setup
 
 You need **Node.js 22+**. There are no dependencies, so there's no `npm install` step.
