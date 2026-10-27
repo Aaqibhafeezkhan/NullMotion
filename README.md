@@ -186,6 +186,22 @@ npm test        # node --test
 
 Comment on an issue to claim it, and we'll review pull requests within a couple of days. Setup and checks are in [CONTRIBUTING.md](CONTRIBUTING.md). Every contributor is credited in the release notes.
 
+<!-- more-from-blixvip:start -->
+## More from blixvip
+
+| Project | What it does |
+| --- | --- |
+| **[GenMotion](https://github.com/blixvip/GenMotion)** | Type an idea, get a finished motion-graphics video. Top Western + Chinese image models, your own API keys. |
+| **[MotionClone](https://github.com/blixvip/MotionClone)** | Rebuild any reference video as an editable HyperFrames project and compare it against the original. |
+| **[html-anime](https://github.com/blixvip/html-anime)** | Turn a scene prompt into a shot sheet, then have a coding agent draw the film in HTML. No video model. |
+| **[easyedit](https://github.com/blixvip/easyedit)** | Type a movie name, get a fan edit: captioned speech cut, then a montage cut to the beat. |
+| **[stick](https://github.com/blixvip/stick)** | Free, open-source stick figure animation software for Windows, Linux and the web. |
+| **[thumbnail-studio](https://github.com/blixvip/thumbnail-studio)** | A minimal Windows workspace for YouTube thumbnails: ChatGPT beside your references. |
+| **[blixtrade](https://github.com/blixvip/blixtrade)** | Open-source core of BLIX, the AI memecoin terminal for Solana, with a public API and MCP server. |
+
+<sub>If one of these helped you, a ⭐ helps other people find it. Follow [@waselyyy](https://x.com/waselyyy) for new drops.</sub>
+<!-- more-from-blixvip:end -->
+
 ## License
 
 [MIT](LICENSE). Bundled GSAP and mp4-muxer keep their own licenses (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)). Reference footage and third-party brand marks belong to their owners.
