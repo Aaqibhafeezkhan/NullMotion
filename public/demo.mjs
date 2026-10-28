@@ -206,7 +206,11 @@ async function drawExportFrame(context, geometry, film, time) {
   const drafts = await Promise.all(sections.map(rasterize));
   context.fillStyle = '#0b0b0c'; context.fillRect(0, 0, geometry.width, geometry.height);
   const f = geometry.film;
-  context.save(); rounded(f.x, f.y, f.w, f.h, 14 * scale); context.clip(); context.drawImage(film, f.x, f.y, f.w, f.h); context.restore();
+  // Centered crop, like the page's object-fit: cover, so a vertical reference is not stretched.
+  const scaleToCover = Math.max(f.w / film.displayWidth, f.h / film.displayHeight);
+  const sourceW = f.w / scaleToCover, sourceH = f.h / scaleToCover;
+  const sourceX = (film.displayWidth - sourceW) / 2, sourceY = (film.displayHeight - sourceH) / 2;
+  context.save(); rounded(f.x, f.y, f.w, f.h, 14 * scale); context.clip(); context.drawImage(film, sourceX, sourceY, sourceW, sourceH, f.x, f.y, f.w, f.h); context.restore();
   context.textBaseline = 'middle'; context.textAlign = 'center'; context.font = `500 ${12.5 * scale}px Inter, system-ui, sans-serif`;
   sections.forEach((section, index) => {
     const { x, y, w, h } = geometry.cards[index], isActive = index === active;
