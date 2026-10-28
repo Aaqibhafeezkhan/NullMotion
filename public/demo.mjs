@@ -128,10 +128,11 @@ function load(reference) {
   if (exporting || current?.id === reference.id) return;
   current = reference; duration = reference.duration;
   video.src = reference.src; video.poster = reference.poster;
+  video.muted = !soundSaved(); soundBlocked = false; soundSync(); // restore the saved choice; first visit stays muted
   document.querySelectorAll('.video-card').forEach(card => card.classList.toggle('current', card.dataset.id === reference.id));
   history.replaceState(null, '', reference.id === HAND_BUILT.id ? '/' : `/?v=${encodeURIComponent(reference.id)}`);
   buildSections();
-  if (!reducedMotion) video.play().catch(() => {});
+  if (!reducedMotion) playPreview();
 }
 
 // ---------- Controls ----------
@@ -152,12 +153,43 @@ $('final-toggle').addEventListener('click', () => {
   if (video.paused) video.play().catch(() => {}); else video.pause();
   $('final-toggle').setAttribute('aria-label', video.paused ? 'Play' : 'Pause');
 });
+// ---------- Sound ----------
+// Browsers refuse autoplay with sound, so only a visitor who has already asked for sound
+// starts unmuted — and even then playback falls back to muted when the browser still says
+// no, keeping the saved choice for the next click. localStorage can throw in private
+// windows; the toggle then simply lives for the session.
+const SOUND_KEY = 'nullmotion-sound';
+const soundSaved = () => { try { return localStorage.getItem(SOUND_KEY) === 'on'; } catch { return false; } };
+const soundRemember = unmuted => { try { localStorage.setItem(SOUND_KEY, unmuted ? 'on' : 'off'); } catch {} };
+let soundBlocked = false; // autoplay with sound was refused; mute for now, keep the saved choice
+function soundSync() {
+  const blocked = soundBlocked && video.muted;
+  $('sound').textContent = blocked ? 'Sound blocked · click to enable' : video.muted ? 'Sound off' : 'Sound on';
+  $('sound').setAttribute('aria-pressed', !video.muted);
+  $('sound').setAttribute('aria-label', blocked ? 'Enable sound' : video.muted ? 'Unmute' : 'Mute');
+}
+function playPreview() {
+  video.play().catch(error => {
+    if (video.muted || error?.name !== 'NotAllowedError') return;
+    video.muted = true; soundBlocked = true; soundSync(); // muted fallback now, saved sound for the next click
+    video.play().catch(() => {});
+  });
+}
+
 $('sound').addEventListener('click', () => {
   video.muted = !video.muted;
-  $('sound').textContent = video.muted ? 'Sound off' : 'Sound on';
-  $('sound').setAttribute('aria-pressed', !video.muted);
-  $('sound').setAttribute('aria-label', video.muted ? 'Unmute' : 'Mute');
+  soundBlocked = false; // the click is the user's explicit choice; the hint no longer applies
+
+  // Save the user's explicit sound preference.
+  soundRemember(!video.muted);
+  soundSync();
+
+  // Retry playback after the user interacts with the sound button.
+  if (video.paused) {
+    video.play().catch(() => {});
+  }
 });
+
 document.addEventListener('keydown', event => {
   if (event.target.closest('button, input, a')) return;
   if (event.code === 'Space') { event.preventDefault(); $('final-toggle').click(); return; }
@@ -328,7 +360,7 @@ async function exportPreview() {
     if (encoder && encoder.state !== 'closed') encoder.close();
     film.pause(); film.removeAttribute('src'); film.load(); film.remove();
     exporting = null; $('download').disabled = false;
-    if (wasPlaying) video.play().catch(() => {});
+    if (wasPlaying) playPreview();
   }
 }
 function toggleMenu(open = $('download-menu').hidden) {
