@@ -200,6 +200,19 @@ document.addEventListener('keydown', event => {
     const next = event.code === 'ArrowRight' ? Math.min(sections.length - 1, active + 1) : Math.max(0, active - 1);
     video.currentTime = sections[next].start;
     render();
+    return;
+  }
+  if (event.key === 'Home' || event.key === 'End') {
+    event.preventDefault();
+    video.currentTime = event.key === 'Home' ? 0 : duration;
+    render();
+    return;
+  }
+  if (video.paused && (event.key === ',' || event.key === '.')) {
+    event.preventDefault();
+    const step = 1 / 30;
+    video.currentTime = Math.min(duration, Math.max(0, video.currentTime + (event.key === ',' ? -step : step)));
+    render();
   }
 });
 new ResizeObserver(layout).observe($('stage'));

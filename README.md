@@ -125,6 +125,9 @@ The importer creates non-destructive segments, extracts thumbnails, and hard-lin
 
 ## FAQ and troubleshooting
 
+**How do I move through the film frame by frame?**
+Pause the film, then press `,` to step back one frame or `.` to step forward (1/30 second). Use `Home` to jump to the start and `End` to jump to the end. The left and right arrow keys still jump between sections.
+
 **The Download button says "Needs Chrome or Edge".**
 Export uses WebCodecs and `requestVideoFrameCallback`. Use a current Chrome or Edge. Firefox and Safari can play the preview but can't export.
 
