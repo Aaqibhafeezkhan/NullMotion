@@ -293,6 +293,7 @@ async function exportPreview() {
     film.onended = () => { ended = true; wake?.(); };
     film.playbackRate = .5; // headroom so the renderer never lets a frame slip by
     await film.play();
+    const renderStartedAt = performance.now();
     while (!failure) {
       if (!queue.length) {
         if (ended) break;
@@ -309,7 +310,15 @@ async function exportPreview() {
       while (encoder.encodeQueueSize > 4) await new Promise(resolve => setTimeout(resolve, 5));
       working = false;
       if (film.paused && !ended && queue.length < 2) film.play().catch(() => {});
-      $('download-label').textContent = `Rendering ${Math.min(99, Math.floor(time / reference.duration * 100))}%`;
+      const progress = Math.min(1, Math.max(0, time / reference.duration));
+      const percent = Math.min(99, Math.floor(progress * 100));
+      const elapsed = (performance.now() - renderStartedAt) / 1000;
+      let label = `Rendering ${percent}%`;
+      if (elapsed >= 2 && progress > 0 && progress < 1) {
+        const remaining = Math.ceil(elapsed * (1 - progress) / progress);
+        label += ` · ~${clockText(remaining)} left`;
+      }
+      $('download-label').textContent = label;
     }
     queue.forEach(item => item.frame.close());
     if (failure) throw failure;
