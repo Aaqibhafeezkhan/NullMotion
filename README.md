@@ -121,6 +121,8 @@ node scripts/plan-sections.mjs      # sections + scene cuts + contact sheets
 
 Imported media stays local in `.local-media/` and `public/references/` (both ignored by Git) and takes precedence over the showcase. Describe each section's beats in `public/references/drafts.json`. Undescribed sections get placeholder drafts. `npm run showcase` rebuilds `showcase/` from the local library.
 
+See **[docs/drafts.md](docs/drafts.md)** for the `drafts.json` file shape, how beat timing works, and one example per beat kind.
+
 The importer creates non-destructive segments, extracts thumbnails, and hard-links the source videos when they are on the same drive as this repo (otherwise it copies them). Original files are only read. The server streams byte ranges, so seeking never reads a whole video into memory.
 
 ## FAQ and troubleshooting
