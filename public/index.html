@@ -1251,7 +1251,7 @@
 
   <div class="modal" id="themeModal">
     <div class="theme-card">
-      <div class="theme-head"><h3>Brand theme</h3><button class="modal-x" id="themeX" style="position:static;">Ã—</button></div>
+      <div class="theme-head"><h3>Brand theme</h3><button class="modal-x" id="themeX" style="position:static;">×</button></div>
       <div class="theme-grid">
         <div class="theme-field full"><label>Saved themes</label><select id="themeSelect"><option value="">New theme</option></select></div>
         <div class="theme-field"><label>Name</label><input id="themeName" placeholder="My YouTube channel" /></div>
@@ -3236,7 +3236,7 @@
     }
 
     function promptDurationOverride(value) {
-      const matches = [...String(value || "").matchAll(/\b(\d+(?:\.\d+)?)\s*(?:[-â€“â€”]\s*)?(?:seconds?|secs?|s)\b/gi)]
+      const matches = [...String(value || "").matchAll(/\b(\d+(?:\.\d+)?)\s*(?:[\-\u2013\u2014]\s*)?(?:seconds?|secs?|s)\b/gi)]
         .map(match => Number(match[1]))
         .filter(Number.isFinite);
       if (!matches.length) return null;
