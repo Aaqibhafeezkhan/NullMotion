@@ -220,7 +220,17 @@ const KINDS = {
   }
 };
 
-const luminance = hex => { const n = parseInt(hex.slice(1), 16); return ((n >> 16) * .3 + ((n >> 8) & 255) * .59 + (n & 255) * .11) / 255; };
+export function luminance(hex) {
+  if (typeof hex !== 'string' || !hex.startsWith('#')) return 1;
+  let raw = hex.slice(1);
+  if (/^[0-9a-fA-F]{3}$/.test(raw)) {
+    raw = raw[0] + raw[0] + raw[1] + raw[1] + raw[2] + raw[2];
+  } else if (!/^[0-9a-fA-F]{6}$/.test(raw)) {
+    return 1;
+  }
+  const n = parseInt(raw, 16);
+  return ((n >> 16) * .3 + ((n >> 8) & 255) * .59 + (n & 255) * .11) / 255;
+}
 // Drafts are strictly black and white: only whether a frame is light or dark is kept from
 // the finished film; every colour becomes black, white or a grey.
 function colors(palette, override = {}) {
