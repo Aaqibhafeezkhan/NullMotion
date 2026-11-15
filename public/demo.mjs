@@ -200,6 +200,7 @@ export function spaceHandledNatively(target) {
 
 document.addEventListener('keydown', event => {
   if (isTextEntry(event.target)) return;
+  if (event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.code === 'Space') {
     // A focused <button> or <a> activates natively on Space. Delegating to
     // final-toggle.click() as well would toggle playback twice, so let the
