@@ -254,3 +254,64 @@ test('served qualityStatus matches the catalog for approved and legacy templates
   assert.equal(byId.get(approved.id).qualityStatus, 'approved', `qualityStatus for ${approved.id}`);
   assert.equal(byId.get(legacy.id).qualityStatus, 'legacy', `qualityStatus for ${legacy.id}`);
 });
+
+test('request handler catches unhandled errors and returns 500 without crashing the server', async t => {
+  const server = createApp().listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => { server.closeAllConnections(); server.close(); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  t.mock.method(console, 'error', () => {});
+
+  server.prependListener('request', (req, res) => {
+    if (req.url === '/throw-error') {
+      const orig = res.setHeader;
+      res.setHeader = (key, val) => {
+        if (key === 'Referrer-Policy') throw new Error('Simulated route failure');
+        return orig.call(res, key, val);
+      };
+    }
+  });
+
+  const response = await fetch(base + '/throw-error');
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), { error: 'Server error.' });
+  assert.equal(console.error.mock.calls.length, 1);
+  assert.match(console.error.mock.calls[0].arguments[0]?.message, /Simulated route failure/);
+
+  // Verify the server remains running and serves subsequent requests normally
+  const home = await fetch(base + '/');
+  assert.equal(home.status, 200);
+  assert.match(await home.text(), /Null Motion/);
+});
+
+test('request handler destroys response when error occurs after headers are sent', async t => {
+  const server = createApp().listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => { server.closeAllConnections(); server.close(); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  t.mock.method(console, 'error', () => {});
+
+  server.prependListener('request', (req, res) => {
+    if (req.url === '/throw-after-headers') {
+      const orig = res.setHeader;
+      res.setHeader = (key, val) => {
+        if (key === 'Referrer-Policy') {
+          res.writeHead(200, { 'Content-Type': 'text/plain' });
+          throw new Error('Simulated post-headers failure');
+        }
+        return orig.call(res, key, val);
+      };
+    }
+  });
+
+  await assert.rejects(fetch(base + '/throw-after-headers'));
+  assert.equal(console.error.mock.calls.length, 1);
+  assert.match(console.error.mock.calls[0].arguments[0]?.message, /Simulated post-headers failure/);
+
+  // Verify the server still serves subsequent requests
+  const health = await fetch(base + '/health');
+  assert.equal(health.status, 200);
+});
+

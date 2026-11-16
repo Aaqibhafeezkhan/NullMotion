@@ -67,64 +67,73 @@ async function serveFile(response, request, directory, pathname) {
 
 export function createApp() {
   return http.createServer(async (request, response) => {
-    response.setHeader('X-Content-Type-Options', 'nosniff');
-    response.setHeader('Referrer-Policy', 'no-referrer');
-    let pathname;
-    try { pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname); }
-    catch { return json(response, 400, { error: 'Invalid URL.' }); }
-    if (!['GET', 'HEAD'].includes(request.method)) return json(response, 501, unsupported);
-    if (pathname.includes('\\') || pathname.includes('\0') || pathname.split('/').some(part => part.startsWith('.'))) {
-      return json(response, 403, { error: 'Forbidden.' });
+    try { await handle(request, response); }
+    catch (error) {
+      console.error(error);
+      if (!response.headersSent) return json(response, 500, { error: 'Server error.' });
+      response.destroy();
     }
-    // Keep the inherited /null/ links working without involving another server.
-    // This must run before any route matches, so every later branch sees the
-    // already-stripped path. `/null` normalizes to `/` so it picks up the
-    // `'/' -> '/demo.html'` rewrite below rather than the directory index.
-    if (pathname === '/null' || pathname === '/null/') pathname = '/';
-    else if (pathname.startsWith('/null/')) pathname = pathname.slice(5);
-    if (pathname === '/api/references') {
-      try {
-        const catalog = await firstExisting(new URL('./public/references/catalog.json', import.meta.url), new URL('references/catalog.json', showcase));
-        const library = JSON.parse(await readFile(catalog, 'utf8'));
-        return json(response, 200, { references: curateReferences(library.references || [], referencePolicy) });
-      }
-      catch { return json(response, 200, { references: [] }); }
-    }
-    const audioMatch = pathname.match(/^\/media\/references\/([a-z0-9-]+)\.aac$/);
-    if (audioMatch) {
-      if (Object.hasOwn(referencePolicy.excluded, audioMatch[1])) return json(response, 404, { error: 'Reference removed from this library.' });
-      const id = audioMatch[1];
-      const ready = await firstExisting(localMedia(`${id}.aac`), new URL(`media/${id}.aac`, showcase));
-      if (ready) return streamVideo(request, response, fileURLToPath(ready), 'audio/aac');
-      const video = await firstExisting(localMedia(`${id}.mp4`), new URL(`media/${id}.mp4`, showcase));
-      if (!video) return json(response, 404, { error: 'Audio unavailable.' });
-      await mkdir(localMedia(''), { recursive: true });
-      const audio = fileURLToPath(localMedia(`${id}.aac`));
-      if (!(await extractAudio(fileURLToPath(video), audio))) return json(response, 404, { error: 'Audio unavailable.' });
-      return streamVideo(request, response, audio, 'audio/aac');
-    }
-    const mediaMatch = pathname.match(/^\/media\/references\/([a-z0-9-]+)\.mp4$/);
-    if (mediaMatch) {
-      if (Object.hasOwn(referencePolicy.excluded, mediaMatch[1])) return json(response, 404, { error: 'Reference removed from this library.' });
-      const video = await firstExisting(localMedia(`${mediaMatch[1]}.mp4`), new URL(`media/${mediaMatch[1]}.mp4`, showcase));
-      return streamVideo(request, response, fileURLToPath(video || localMedia(`${mediaMatch[1]}.mp4`)));
-    }
-    if (pathname === '/') pathname = '/demo.html';
-    else if (pathname === '/editor') pathname = '/editor.html';
-    if (readOnly.has(pathname)) return json(response, 200, readOnly.get(pathname));
-    const sourceMatch = pathname.match(/^\/api\/v1\/templates\/([^/]+)\/source$/);
-    if (sourceMatch) {
-      const template = templates.find(item => item.id === sourceMatch[1]);
-      if (!template) return json(response, 404, { error: 'Template not found.' });
-      pathname = '/' + template.preview.html;
-    } else if (pathname.startsWith('/api/') || pathname === '/generate') {
-      return json(response, 501, unsupported);
-    }
-    if (pathname.startsWith('/references/') && !(await exists(path.resolve(root, '.' + pathname)))) {
-      return serveFile(response, request, fileURLToPath(showcase), pathname);
-    }
-    return serveFile(response, request, root, pathname);
   });
+}
+
+async function handle(request, response) {
+  response.setHeader('X-Content-Type-Options', 'nosniff');
+  response.setHeader('Referrer-Policy', 'no-referrer');
+  let pathname;
+  try { pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname); }
+  catch { return json(response, 400, { error: 'Invalid URL.' }); }
+  if (!['GET', 'HEAD'].includes(request.method)) return json(response, 501, unsupported);
+  if (pathname.includes('\\') || pathname.includes('\0') || pathname.split('/').some(part => part.startsWith('.'))) {
+    return json(response, 403, { error: 'Forbidden.' });
+  }
+  // Keep the inherited /null/ links working without involving another server.
+  // This must run before any route matches, so every later branch sees the
+  // already-stripped path. `/null` normalizes to `/` so it picks up the
+  // `'/' -> '/demo.html'` rewrite below rather than the directory index.
+  if (pathname === '/null' || pathname === '/null/') pathname = '/';
+  else if (pathname.startsWith('/null/')) pathname = pathname.slice(5);
+  if (pathname === '/api/references') {
+    try {
+      const catalog = await firstExisting(new URL('./public/references/catalog.json', import.meta.url), new URL('references/catalog.json', showcase));
+      const library = JSON.parse(await readFile(catalog, 'utf8'));
+      return json(response, 200, { references: curateReferences(library.references || [], referencePolicy) });
+    }
+    catch { return json(response, 200, { references: [] }); }
+  }
+  const audioMatch = pathname.match(/^\/media\/references\/([a-z0-9-]+)\.aac$/);
+  if (audioMatch) {
+    if (Object.hasOwn(referencePolicy.excluded, audioMatch[1])) return json(response, 404, { error: 'Reference removed from this library.' });
+    const id = audioMatch[1];
+    const ready = await firstExisting(localMedia(`${id}.aac`), new URL(`media/${id}.aac`, showcase));
+    if (ready) return streamVideo(request, response, fileURLToPath(ready), 'audio/aac');
+    const video = await firstExisting(localMedia(`${id}.mp4`), new URL(`media/${id}.mp4`, showcase));
+    if (!video) return json(response, 404, { error: 'Audio unavailable.' });
+    await mkdir(localMedia(''), { recursive: true });
+    const audio = fileURLToPath(localMedia(`${id}.aac`));
+    if (!(await extractAudio(fileURLToPath(video), audio))) return json(response, 404, { error: 'Audio unavailable.' });
+    return streamVideo(request, response, audio, 'audio/aac');
+  }
+  const mediaMatch = pathname.match(/^\/media\/references\/([a-z0-9-]+)\.mp4$/);
+  if (mediaMatch) {
+    if (Object.hasOwn(referencePolicy.excluded, mediaMatch[1])) return json(response, 404, { error: 'Reference removed from this library.' });
+    const video = await firstExisting(localMedia(`${mediaMatch[1]}.mp4`), new URL(`media/${mediaMatch[1]}.mp4`, showcase));
+    return streamVideo(request, response, fileURLToPath(video || localMedia(`${mediaMatch[1]}.mp4`)));
+  }
+  if (pathname === '/') pathname = '/demo.html';
+  else if (pathname === '/editor') pathname = '/editor.html';
+  if (readOnly.has(pathname)) return json(response, 200, readOnly.get(pathname));
+  const sourceMatch = pathname.match(/^\/api\/v1\/templates\/([^/]+)\/source$/);
+  if (sourceMatch) {
+    const template = templates.find(item => item.id === sourceMatch[1]);
+    if (!template) return json(response, 404, { error: 'Template not found.' });
+    pathname = '/' + template.preview.html;
+  } else if (pathname.startsWith('/api/') || pathname === '/generate') {
+    return json(response, 501, unsupported);
+  }
+  if (pathname.startsWith('/references/') && !(await exists(path.resolve(root, '.' + pathname)))) {
+    return serveFile(response, request, fileURLToPath(showcase), pathname);
+  }
+  return serveFile(response, request, root, pathname);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
