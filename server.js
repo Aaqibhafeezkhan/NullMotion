@@ -76,6 +76,12 @@ export function createApp() {
     if (pathname.includes('\\') || pathname.includes('\0') || pathname.split('/').some(part => part.startsWith('.'))) {
       return json(response, 403, { error: 'Forbidden.' });
     }
+    // Keep the inherited /null/ links working without involving another server.
+    // This must run before any route matches, so every later branch sees the
+    // already-stripped path. `/null` normalizes to `/` so it picks up the
+    // `'/' -> '/demo.html'` rewrite below rather than the directory index.
+    if (pathname === '/null' || pathname === '/null/') pathname = '/';
+    else if (pathname.startsWith('/null/')) pathname = pathname.slice(5);
     if (pathname === '/api/references') {
       try {
         const catalog = await firstExisting(new URL('./public/references/catalog.json', import.meta.url), new URL('references/catalog.json', showcase));
@@ -114,9 +120,6 @@ export function createApp() {
     } else if (pathname.startsWith('/api/') || pathname === '/generate') {
       return json(response, 501, unsupported);
     }
-    // Keep the inherited /null/ links working without involving another server.
-    if (pathname === '/null') pathname = '/';
-    else if (pathname.startsWith('/null/')) pathname = pathname.slice(5);
     if (pathname.startsWith('/references/') && !(await exists(path.resolve(root, '.' + pathname)))) {
       return serveFile(response, request, fileURLToPath(showcase), pathname);
     }

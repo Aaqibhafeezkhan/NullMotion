@@ -47,6 +47,34 @@ test('public workspace is standalone, read-only, and serves its own previews', a
   assert.equal((await get('/media/references/nexa-references-2095595661559574528.mp4')).status, 404);
 });
 
+test('inherited /null/ path prefix is stripped before route matching', async t => {
+  const server = createApp().listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => { server.closeAllConnections(); server.close(); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const get = path => fetch(base + path);
+  const title = async path => (await (await get(path)).text()).match(/<title>[^<]*/)[0];
+
+  // Every route that a `/null/...` prefix can reach must still be matched.
+  for (const path of [
+    '/null/health',
+    '/null/api/v1/templates',
+    '/null/api/references',
+    '/null/editor',
+    '/null/media/references/69614b10fa87.mp4'
+  ]) {
+    const response = await get(path);
+    assert.equal(response.status, 200, path);
+    await response.body?.cancel();
+  }
+
+  // `/null` must serve the homepage (`demo.html`), not the directory index.
+  const home = await title('/');
+  assert.equal(await title('/null'), home);
+  assert.equal(await title('/null/'), home);
+  assert.notEqual(home, await title('/index.html'));
+});
+
 
 test('reference media routes stream video ranges, HEAD responses, and audio', async t => {
   const id = '69614b10fa87';
