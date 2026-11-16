@@ -1,4 +1,4 @@
-import { splitReference, locateClip, moveClip, sequenceDuration } from './editor-model.mjs';
+import { splitReference, locateClip, moveClip, sequenceDuration, demoClipList } from './editor-model.mjs';
 
 const $ = id => document.getElementById(id);
 const video = $('preview-video');
@@ -140,18 +140,14 @@ function restoreHistory(direction) {
   renderTimeline(); seek(startOf(state.selected)); persist();
 }
 function demoClips() {
-  const picks = [['69614b10fa87', 4], ['2896ae0eec89', 2], ['760ad39806d7', 1], ['3227c09daea3', 13]].filter(([id]) => refFor(id));
-  if (!picks.length) return state.references.slice(0, 4).map(reference => ({ ...reference.segments[0] }));
-  return picks.map(([id, part], index) => {
-    const reference = refFor(id);
-    const segment = reference.segments[Math.min(part, reference.segments.length - 1)];
-    return { ...segment, in: index === 0 ? +((segment.in + segment.out) / 2).toFixed(3) : segment.in, label: ['The opening', 'The build', 'The reveal', 'The close'][index] };
-  });
+  const clips = demoClipList(state.references, [['69614b10fa87', 4], ['2896ae0eec89', 2], ['760ad39806d7', 1], ['3227c09daea3', 13]]);
+  return clips.map((clip, index) => ({ ...clip, in: index === 0 ? +((clip.in + clip.out) / 2).toFixed(3) : clip.in, label: ['The opening', 'The build', 'The reveal', 'The close'][index] }));
 }
 function loadDemo() {
   if (!state.references.length) return toast('Add a reference video to begin.');
   snapshot(); pause(); state.clips = demoClips(); state.selected = 0;
-  renderTimeline(); seek(0); persist(); toast('Four moments. One new direction.');
+  const count = state.clips.length;
+  renderTimeline(); seek(0); persist(); toast(`${count} ${count === 1 ? 'moment' : 'moments'}. One new direction.`);
 }
 function brand() {
   const name = $('brand-name').value.trim() || 'Your brand';
