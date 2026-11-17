@@ -330,7 +330,23 @@ async function exportPreview(start = 0, end = Infinity, suffix = 'null-preview')
   const reference = current, geometry = exportGeometry(), wasPlaying = !video.paused;
   start = Math.max(0, start); end = Math.min(reference.duration, end);
   if (!(end > start)) return;
-  exporting = true; video.pause(); $('download').disabled = true; $('download-label').textContent = 'Preparing…';
+  exporting = true; $('download').disabled = true; $('download-label').textContent = 'Preparing…';
+  let writable = null, writableClosed = false;
+  if (typeof window.showSaveFilePicker === 'function') {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `${fileName(reference)}-${suffix}.mp4`,
+        types: [{ description: 'MP4 video', accept: { 'video/mp4': ['.mp4'] } }]
+      });
+      writable = await handle.createWritable();
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        exporting = null; $('download').disabled = false; $('download-label').textContent = 'Download';
+        return;
+      }
+    }
+  }
+  video.pause();
   const canvas = Object.assign(document.createElement('canvas'), { width: geometry.width, height: geometry.height });
   const context = canvas.getContext('2d');
   const film = Object.assign(document.createElement('video'), { muted: true, playsInline: true, preload: 'auto', src: reference.src });
@@ -341,7 +357,8 @@ async function exportPreview(start = 0, end = Infinity, suffix = 'null-preview')
     const [audio] = await Promise.all([referenceAudio(reference), new Promise((resolve, reject) => { film.onloadeddata = resolve; film.onerror = reject; })]);
     if (start > 0) await new Promise(resolve => { film.onseeked = resolve; film.currentTime = start; });
     const muxer = new Mp4Muxer.Muxer({
-      target: new Mp4Muxer.ArrayBufferTarget(), fastStart: 'in-memory', firstTimestampBehavior: 'offset',
+      target: writable ? new Mp4Muxer.FileSystemWritableFileStreamTarget(writable) : new Mp4Muxer.ArrayBufferTarget(),
+      fastStart: writable ? false : 'in-memory', firstTimestampBehavior: 'offset',
       video: { codec: 'avc', width: geometry.width, height: geometry.height },
       ...(audio ? { audio: { codec: 'aac', numberOfChannels: audio.numberOfChannels, sampleRate: audio.sampleRate } } : {})
     });
@@ -396,11 +413,17 @@ async function exportPreview(start = 0, end = Infinity, suffix = 'null-preview')
     await encoder.flush();
     if (audio) { $('download-label').textContent = 'Adding sound…'; await encodeAudio(audio, muxer, start, Math.min(end, lastTime + 1 / 30)); }
     muxer.finalize();
-    const url = URL.createObjectURL(new Blob([muxer.target.buffer], { type: 'video/mp4' }));
-    save(url, `${fileName(reference)}-${suffix}.mp4`);
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (writable) {
+      await writable.close();
+      writableClosed = true;
+    } else {
+      const url = URL.createObjectURL(new Blob([muxer.target.buffer], { type: 'video/mp4' }));
+      save(url, `${fileName(reference)}-${suffix}.mp4`);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
     $('download-label').textContent = 'Download';
   } catch (error) {
+    if (writable && !writableClosed) await writable.abort().catch(() => {});
     console.error('Export failed', error);
     $('download-label').textContent = 'Export failed';
     setTimeout(() => { $('download-label').textContent = 'Download'; }, 3000);
