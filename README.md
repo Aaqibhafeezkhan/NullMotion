@@ -36,7 +36,7 @@
 </p>
 
 <p align="center">
-  🛠 <b>Built in the open</b> · 9 contributors · 21 good first issues · we review PRs within 24h → <a href="https://github.com/blixvip/NullMotion/issues/13"><b>start here</b></a>
+  🛠 <b>Built in the open</b> · 10 contributors · 20 good first issues · we review PRs within 24h → <a href="https://github.com/blixvip/NullMotion/issues/13"><b>start here</b></a>
 </p>
 
 ## Quick start
